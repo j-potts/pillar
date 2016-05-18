@@ -1,9 +1,12 @@
 package de.kaufhof.pillar.cli
 
 import java.io.File
+import java.util.Map.Entry
 
 import com.datastax.driver.core.Cluster
-import com.typesafe.config.ConfigFactory
+
+import com.typesafe.config.{ConfigFactory, ConfigObject, ConfigValue}
+
 import de.kaufhof.pillar._
 import de.kaufhof.pillar.config.ConnectionConfiguration
 
@@ -43,9 +46,17 @@ class App(reporter: Reporter) {
       case _ => cluster.connect(cassandraConfiguration.keyspace)
     }
 
+    val replicationOptions = getReplicationOptions(dataStoreName, environment)
 
-    val command = Command(commandLineConfiguration.command, session, cassandraConfiguration.keyspace,
-      commandLineConfiguration.timeStampOption, registry)
+    // TODO: Command shouldn't be the sole point of entry when passing things into a migration.
+    // TODO: This should be refactored at some point.
+    val command = Command(
+      commandLineConfiguration.command,
+      session,
+      cassandraConfiguration.keyspace,
+      commandLineConfiguration.timeStampOption,
+      registry,
+      replicationOptions)
 
     try {
       CommandExecutor().execute(command, reporter)
@@ -65,5 +76,60 @@ class App(reporter: Reporter) {
       clusterBuilder.withSSL()
 
     clusterBuilder.build()
+  }
+
+  /**
+    * Parses replication settings from a config that looks like:
+    * {{{
+    *   replicationStrategy: "SimpleStrategy"
+    *   replicationFactor: 3
+    * }}}
+    *
+    * or:
+    *
+    * {{{
+    *   replicationStrategy: "NetworkTopologyStrategy"
+    *   replicationFactor: [
+    *     {dc1: 3},
+    *     {dc2: 3}
+    *   ]
+    * }}}
+    * @param dataStoreName The target data store, as defined in application.conf
+    * @param environment The environment, as defined in application.conf (i.e. "pillar.dataStoreName.environment {...)
+    * @return ReplicationOptions with a default of Simple Strategy with a replication factor of 3.
+    */
+  private def getReplicationOptions(dataStoreName: String, environment: String): ReplicationOptions = {
+    val repStrategyStr = configuration.getString(s"pillar.$dataStoreName.$environment.replicationStrategy")
+
+    val repStrategy = repStrategyStr match {
+
+      case "SimpleStrategy" =>
+        val repFactor = configuration.getInt(s"pillar.$dataStoreName.$environment.replicationFactor")
+        SimpleStrategy(repFactor)
+
+      case "NetworkTopologyStrategy" =>
+        import scala.collection.JavaConverters._
+        val dcConfigBuffer = configuration
+          .getObjectList(s"pillar.$dataStoreName.$environment.replicationFactor")
+          .asScala
+
+        val dcBuffer = for {
+          item: ConfigObject <- dcConfigBuffer
+          entry: Entry[String, ConfigValue] <- item.entrySet().asScala
+          dcName = entry.getKey
+          dcRepFactor = entry.getValue.unwrapped().toString.toInt
+        } yield (dcName, dcRepFactor)
+
+        val datacenters = dcBuffer
+          .map(dc => CassandraDataCenter(dc._1, dc._2))
+          .toList
+
+        NetworkTopologyStrategy(datacenters)
+
+      case _ =>
+        SimpleStrategy()
+    }
+
+    new ReplicationOptions(repStrategy)
   }
 }

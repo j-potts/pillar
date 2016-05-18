@@ -1,17 +1,22 @@
 package de.kaufhof.pillar
 
-object ReplicationOptions {
-  val default = new ReplicationOptions(Map("class" -> "SimpleStrategy", "replication_factor" -> 3))
-}
+final case class ReplicationOptions(strategy: ReplicationStrategy)
 
-class ReplicationOptions(options: Map[String, Any]) {
+sealed trait ReplicationStrategy {
+  override def toString: String
+}
+final case class SimpleStrategy(replicationFactor: Int = 3) extends ReplicationStrategy {
+
+  override def toString: String = s"{'class' : 'SimpleStrategy', 'replication_factor' : $replicationFactor }"
+}
+final case class NetworkTopologyStrategy(dataCenters: Seq[CassandraDataCenter]) extends ReplicationStrategy {
+
   override def toString: String = {
-    "{" + options.map {
-      case (key, value) =>
-        value match {
-          case number: Int => "'%s':%d".format(key, number)
-          case string: String => "'%s':'%s'".format(key, string)
-        }
-    }.mkString(",") + "}"
+    val replicationFacString = dataCenters.map { dc =>
+      s"'${dc.name}' : ${dc.replicationFactor} "
+    }.mkString(",")
+
+    s"{'class' : 'NetworkTopologyStrategy', $replicationFacString }"
   }
 }
+final case class CassandraDataCenter(name: String, replicationFactor: Int)

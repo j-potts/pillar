@@ -17,7 +17,7 @@ object Migrator {
 trait Migrator {
   def migrate(session: Session, dateRestriction: Option[Date] = None)
 
-  def initialize(session: Session, keyspace: String, replicationOptions: ReplicationOptions)
+  def initialize(session: Session, keyspace: String, replicationOptions: ReplicationStrategy)
 
   def destroy(session: Session, keyspace: String)
 }

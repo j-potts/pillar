@@ -1,14 +1,14 @@
 package de.kaufhof.pillar
 
-final case class ReplicationOptions(strategy: ReplicationStrategy)
-
 sealed trait ReplicationStrategy {
   override def toString: String
 }
+
 final case class SimpleStrategy(replicationFactor: Int = 3) extends ReplicationStrategy {
 
   override def toString: String = s"{'class' : 'SimpleStrategy', 'replication_factor' : $replicationFactor }"
 }
+
 final case class NetworkTopologyStrategy(dataCenters: Seq[CassandraDataCenter]) extends ReplicationStrategy {
 
   override def toString: String = {
@@ -19,4 +19,5 @@ final case class NetworkTopologyStrategy(dataCenters: Seq[CassandraDataCenter]) 
     s"{'class' : 'NetworkTopologyStrategy', $replicationFacString }"
   }
 }
+
 final case class CassandraDataCenter(name: String, replicationFactor: Int)

@@ -95,13 +95,13 @@ class App(reporter: Reporter) {
     *   ]
     * }}}
     * @param dataStoreName The target data store, as defined in application.conf
-    * @param environment The environment, as defined in application.conf (i.e. "pillar.dataStoreName.environment {...)
+    * @param environment The environment, as defined in application.conf (i.e. "pillar.dataStoreName.environment {...})
     * @return ReplicationOptions with a default of Simple Strategy with a replication factor of 3.
     */
-  private def getReplicationOptions(dataStoreName: String, environment: String): ReplicationOptions = {
+  private def getReplicationOptions(dataStoreName: String, environment: String): ReplicationStrategy = {
     val repStrategyStr = configuration.getString(s"pillar.$dataStoreName.$environment.replicationStrategy")
 
-    val repStrategy = repStrategyStr match {
+    repStrategyStr match {
 
       case "SimpleStrategy" =>
         val repFactor = configuration.getInt(s"pillar.$dataStoreName.$environment.replicationFactor")
@@ -129,7 +129,5 @@ class App(reporter: Reporter) {
       case _ =>
         SimpleStrategy()
     }
-
-    new ReplicationOptions(repStrategy)
   }
 }

@@ -81,7 +81,7 @@ class PillarLibraryAcceptanceSpec extends FeatureSpec
 
     scenario("initialize an existing keyspace without a applied_migrations column family") {
       Given("an existing keyspace")
-      session.execute("CREATE KEYSPACE %s WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 1}".format(keyspaceName))
+      session.execute(s"CREATE KEYSPACE $keyspaceName WITH replication = ${simpleStrategy.toString}")
 
       When("the migrator initializes the keyspace")
       migrator.initialize(session, keyspaceName, simpleStrategy)

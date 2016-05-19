@@ -4,11 +4,11 @@ import java.io.File
 import java.util.Map.Entry
 
 import com.datastax.driver.core.Cluster
-
 import com.typesafe.config.{ConfigFactory, ConfigObject, ConfigValue}
-
 import de.kaufhof.pillar._
 import de.kaufhof.pillar.config.ConnectionConfiguration
+
+import scala.util.{Failure, Success, Try}
 
 object App {
   def apply(reporter: Reporter = new PrintStreamReporter(System.out)): App = {
@@ -82,6 +82,8 @@ class App(reporter: Reporter) {
     clusterBuilder.build()
   }
 
+  private final case class ReplicationStrategyConfigError(msg: String) extends Exception
+
   /**
     * Parses replication settings from a config that looks like:
     * {{{
@@ -104,35 +106,38 @@ class App(reporter: Reporter) {
     * @return ReplicationOptions with a default of Simple Strategy with a replication factor of 3.
     */
   private def getReplicationStrategy(dataStoreName: String, environment: String): ReplicationStrategy = try {
-    val repStrategyStr = configuration.getString(s"pillar.$dataStoreName.$environment.replicationStrategy")
+    val repStrategyStr = Try(configuration.getString(s"pillar.$dataStoreName.$environment.replicationStrategy"))
 
     repStrategyStr match {
+      case Success(repStrategy) => repStrategy match {
+        case "SimpleStrategy" =>
+          val repFactor = configuration.getInt(s"pillar.$dataStoreName.$environment.replicationFactor")
+          SimpleStrategy(repFactor)
 
-      case "SimpleStrategy" =>
-        val repFactor = configuration.getInt(s"pillar.$dataStoreName.$environment.replicationFactor")
-        SimpleStrategy(repFactor)
+        case "NetworkTopologyStrategy" =>
+          import scala.collection.JavaConverters._
+          val dcConfigBuffer = configuration
+            .getObjectList(s"pillar.$dataStoreName.$environment.replicationFactor")
+            .asScala
 
-      case "NetworkTopologyStrategy" =>
-        import scala.collection.JavaConverters._
-        val dcConfigBuffer = configuration
-          .getObjectList(s"pillar.$dataStoreName.$environment.replicationFactor")
-          .asScala
+          val dcBuffer = for {
+            item: ConfigObject <- dcConfigBuffer
+            entry: Entry[String, ConfigValue] <- item.entrySet().asScala
+            dcName = entry.getKey
+            dcRepFactor = entry.getValue.unwrapped().toString.toInt
+          } yield (dcName, dcRepFactor)
 
-        val dcBuffer = for {
-          item: ConfigObject <- dcConfigBuffer
-          entry: Entry[String, ConfigValue] <- item.entrySet().asScala
-          dcName = entry.getKey
-          dcRepFactor = entry.getValue.unwrapped().toString.toInt
-        } yield (dcName, dcRepFactor)
+          val datacenters = dcBuffer
+            .map(dc => CassandraDataCenter(dc._1, dc._2))
+            .toList
 
-        val datacenters = dcBuffer
-          .map(dc => CassandraDataCenter(dc._1, dc._2))
-          .toList
+          NetworkTopologyStrategy(datacenters)
 
-        NetworkTopologyStrategy(datacenters)
+        case _ =>
+          throw new ReplicationStrategyConfigError(s"$repStrategy is not a valid replication strategy.")
+      }
 
-      case _ =>
-        SimpleStrategy()
+      case Failure(e) => SimpleStrategy()
     }
   } catch {
     case e: Exception => throw e

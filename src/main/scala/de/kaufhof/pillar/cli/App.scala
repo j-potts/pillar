@@ -46,7 +46,11 @@ class App(reporter: Reporter) {
       case _ => cluster.connect(cassandraConfiguration.keyspace)
     }
 
-    val replicationOptions = getReplicationOptions(dataStoreName, environment)
+    val replicationOptions = try {
+      getReplicationStrategy(dataStoreName, environment)
+    } catch {
+      case e: Exception => throw e
+    }
 
     // TODO: Command shouldn't be the sole point of entry when passing things into a migration.
     // TODO: This should be refactored at some point.
@@ -94,11 +98,12 @@ class App(reporter: Reporter) {
     *     {dc2: 3}
     *   ]
     * }}}
+    *
     * @param dataStoreName The target data store, as defined in application.conf
     * @param environment The environment, as defined in application.conf (i.e. "pillar.dataStoreName.environment {...})
     * @return ReplicationOptions with a default of Simple Strategy with a replication factor of 3.
     */
-  private def getReplicationOptions(dataStoreName: String, environment: String): ReplicationStrategy = {
+  private def getReplicationStrategy(dataStoreName: String, environment: String): ReplicationStrategy = try {
     val repStrategyStr = configuration.getString(s"pillar.$dataStoreName.$environment.replicationStrategy")
 
     repStrategyStr match {
@@ -129,5 +134,7 @@ class App(reporter: Reporter) {
       case _ =>
         SimpleStrategy()
     }
+  } catch {
+    case e: Exception => throw e
   }
 }

@@ -15,22 +15,23 @@ class CommandExecutorSpec extends FunSpec with BeforeAndAfter with MockitoSugar 
     val registry = mock[Registry]
     val reporter = mock[Reporter]
     val migrator = mock[Migrator]
+    val replicationStrategy = SimpleStrategy()
     val migratorConstructor = mock[((Registry, Reporter) => Migrator)]
     stub(migratorConstructor.apply(registry, reporter)).toReturn(migrator)
     val executor = new CommandExecutor()(migratorConstructor)
 
     describe("an initialize action") {
-      val command = Command(Initialize, session, keyspace, None, registry)
+      val command = Command(Initialize, session, keyspace, None, registry, replicationStrategy)
 
       executor.execute(command, reporter)
 
       it("initializes") {
-        verify(migrator).initialize(session, keyspace)
+        verify(migrator).initialize(session, keyspace, replicationStrategy)
       }
     }
 
     describe("a migrate action without date restriction") {
-      val command = Command(Migrate, session, keyspace, None, registry)
+      val command = Command(Migrate, session, keyspace, None, registry, replicationStrategy)
 
       executor.execute(command, reporter)
 
@@ -41,7 +42,7 @@ class CommandExecutorSpec extends FunSpec with BeforeAndAfter with MockitoSugar 
 
     describe("a migrate action with date restriction") {
       val date = new Date()
-      val command = Command(Migrate, session, keyspace, Some(date.getTime), registry)
+      val command = Command(Migrate, session, keyspace, Some(date.getTime), registry, replicationStrategy)
 
       executor.execute(command, reporter)
 

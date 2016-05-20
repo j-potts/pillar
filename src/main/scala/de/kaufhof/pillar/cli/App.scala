@@ -106,6 +106,8 @@ class App(reporter: Reporter) {
     * @return ReplicationOptions with a default of Simple Strategy with a replication factor of 3.
     */
   private def getReplicationStrategy(dataStoreName: String, environment: String): ReplicationStrategy = try {
+    import com.typesafe.config.ConfigException
+
     val repStrategyStr = Try(configuration.getString(s"pillar.$dataStoreName.$environment.replicationStrategy"))
 
     repStrategyStr match {
@@ -137,7 +139,8 @@ class App(reporter: Reporter) {
           throw new ReplicationStrategyConfigError(s"$repStrategy is not a valid replication strategy.")
       }
 
-      case Failure(e) => SimpleStrategy()
+      case Failure(e: ConfigException.Missing) => SimpleStrategy()
+      case Failure(e) => throw e
     }
   } catch {
     case e: Exception => throw e

@@ -2,7 +2,8 @@ package de.kaufhof.pillar
 
 import java.util.Map.Entry
 
-import com.typesafe.config.{Config, ConfigObject, ConfigValue, ConfigException}
+import com.typesafe.config.ConfigException.BadValue
+import com.typesafe.config.{Config, ConfigException, ConfigObject, ConfigValue}
 
 import scala.util.{Failure, Success, Try}
 
@@ -69,6 +70,7 @@ object ReplicationStrategyBuilder {
       case Failure(e) => throw e
     }
   } catch {
+    case e: IllegalArgumentException => throw new BadValue(s"pillar.$dataStoreName.$environment", e.getMessage)
     case e: Exception => throw e
   }
 }

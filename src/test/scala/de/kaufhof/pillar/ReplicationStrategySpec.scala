@@ -1,5 +1,6 @@
 package de.kaufhof.pillar
 
+import com.typesafe.config.ConfigException.BadValue
 import com.typesafe.config.{ConfigException, ConfigFactory}
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -49,8 +50,8 @@ class ReplicationStrategySpec extends FlatSpec with Matchers {
   }
 
   behavior of "A simple strategy configuration with no replication factor"
-  it should "return an IllegalArgumentException exception" in {
-    intercept[IllegalArgumentException] {
+  it should "return an BadValue exception" in {
+    intercept[BadValue] {
       ReplicationStrategyBuilder.getReplicationStrategy(configuration, datastore, "simpleZeroRep")
     }
   }
@@ -71,15 +72,15 @@ class ReplicationStrategySpec extends FlatSpec with Matchers {
   }
   
   behavior of "A network topology strategy configuration with an empty replication factor array"
-  it should "return an IllegalArgumentException exception" in {
-    intercept[IllegalArgumentException] {
+  it should "return an BadValue exception" in {
+    intercept[BadValue] {
       ReplicationStrategyBuilder.getReplicationStrategy(configuration, datastore, "netEmptyRep")
     }
   }
 
   behavior of "A network topology strategy configuration with a datacenter with a replication factor of 0"
-  it should "return an IllegalArgumentException exception" in {
-    intercept[IllegalArgumentException] {
+  it should "return an BadValue exception" in {
+    intercept[BadValue] {
       ReplicationStrategyBuilder.getReplicationStrategy(configuration, datastore, "netZeroRep")
     }
   }

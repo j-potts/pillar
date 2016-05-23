@@ -7,7 +7,7 @@ sealed trait ReplicationStrategy {
 final case class SimpleStrategy(replicationFactor: Int = 3) extends ReplicationStrategy {
   require(replicationFactor > 0)
 
-  override def toString: String = s"{'class' : 'SimpleStrategy', 'replication_factor' : $replicationFactor }"
+  override def toString: String = s"{'class' : 'SimpleStrategy', 'replication_factor' : $replicationFactor}"
 }
 
 final case class NetworkTopologyStrategy(dataCenters: Seq[CassandraDataCenter]) extends ReplicationStrategy {
@@ -16,7 +16,7 @@ final case class NetworkTopologyStrategy(dataCenters: Seq[CassandraDataCenter]) 
   override def toString: String = {
     val replicationFacString = dataCenters.map { dc =>
       s"'${dc.name}' : ${dc.replicationFactor} "
-    }.mkString(",")
+    }.mkString(", ")
 
     s"{'class' : 'NetworkTopologyStrategy', $replicationFacString }"
   }

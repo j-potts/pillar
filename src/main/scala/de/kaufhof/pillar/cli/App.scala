@@ -1,14 +1,11 @@
 package de.kaufhof.pillar.cli
 
 import java.io.File
-import java.util.Map.Entry
 
 import com.datastax.driver.core.Cluster
-import com.typesafe.config.{ConfigFactory, ConfigObject, ConfigValue}
+import com.typesafe.config.ConfigFactory
 import de.kaufhof.pillar._
 import de.kaufhof.pillar.config.ConnectionConfiguration
-
-import scala.util.{Failure, Success, Try}
 
 object App {
   def apply(reporter: Reporter = new PrintStreamReporter(System.out)): App = {

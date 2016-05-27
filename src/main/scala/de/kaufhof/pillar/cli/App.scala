@@ -43,9 +43,21 @@ class App(reporter: Reporter) {
       case _ => cluster.connect(cassandraConfiguration.keyspace)
     }
 
+    val replicationOptions = try {
+      ReplicationStrategyBuilder.getReplicationStrategy(configuration, dataStoreName, environment)
+    } catch {
+      case e: Exception => throw e
+    }
 
-    val command = Command(commandLineConfiguration.command, session, cassandraConfiguration.keyspace,
-      commandLineConfiguration.timeStampOption, registry)
+    // TODO: Command shouldn't be the sole point of entry when passing things into a migration.
+    // TODO: This should be refactored at some point.
+    val command = Command(
+      commandLineConfiguration.command,
+      session,
+      cassandraConfiguration.keyspace,
+      commandLineConfiguration.timeStampOption,
+      registry,
+      replicationOptions)
 
     try {
       CommandExecutor().execute(command, reporter)

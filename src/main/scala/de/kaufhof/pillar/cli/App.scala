@@ -2,7 +2,7 @@ package de.kaufhof.pillar.cli
 
 import java.io.File
 
-import com.datastax.driver.core.Cluster
+import com.datastax.driver.core.{ConsistencyLevel, QueryOptions, Cluster}
 import com.typesafe.config.ConfigFactory
 import de.kaufhof.pillar._
 import de.kaufhof.pillar.config.ConnectionConfiguration
@@ -55,9 +55,13 @@ class App(reporter: Reporter) {
   }
 
   private def createCluster(connectionConfiguration:ConnectionConfiguration): Cluster = {
+    val queryOptions = new QueryOptions()
+    queryOptions.setConsistencyLevel(ConsistencyLevel.QUORUM)
+
     val clusterBuilder = Cluster.builder()
       .addContactPoint(connectionConfiguration.seedAddress)
       .withPort(connectionConfiguration.port)
+      .withQueryOptions(queryOptions)
     connectionConfiguration.auth.foreach(clusterBuilder.withAuthProvider)
 
     connectionConfiguration.sslConfig.foreach(_.setAsSystemProperties())

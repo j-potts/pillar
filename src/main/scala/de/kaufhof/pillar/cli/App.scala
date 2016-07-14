@@ -3,13 +3,14 @@ package de.kaufhof.pillar.cli
 import java.io.File
 
 import com.datastax.driver.core.Cluster
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
 import de.kaufhof.pillar._
 import de.kaufhof.pillar.config.ConnectionConfiguration
 
 object App {
-  def apply(reporter: Reporter = new PrintStreamReporter(System.out)): App = {
-    new App(reporter)
+  def apply(reporter: Reporter = new PrintStreamReporter(System.out),
+            configuration: Config = ConfigFactory.load()): App = {
+    new App(reporter, configuration)
   }
 
   def main(arguments: Array[String]) {
@@ -25,8 +26,7 @@ object App {
   }
 }
 
-class App(reporter: Reporter) {
-  private val configuration = ConfigFactory.load()
+class App(reporter: Reporter, configuration: Config) {
 
   def run(arguments: Array[String]) {
     val commandLineConfiguration = CommandLineConfiguration.buildFromArguments(arguments)
@@ -36,7 +36,7 @@ class App(reporter: Reporter) {
 
     val cassandraConfiguration = new ConnectionConfiguration(dataStoreName, environment, configuration)
 
-    val cluster:Cluster = createCluster(cassandraConfiguration)
+    val cluster: Cluster = createCluster(cassandraConfiguration)
 
     val session = commandLineConfiguration.command match {
       case Initialize => cluster.connect()
@@ -66,7 +66,7 @@ class App(reporter: Reporter) {
     }
   }
 
-  private def createCluster(connectionConfiguration:ConnectionConfiguration): Cluster = {
+  private def createCluster(connectionConfiguration: ConnectionConfiguration): Cluster = {
     val clusterBuilder = Cluster.builder()
       .addContactPoint(connectionConfiguration.seedAddress)
       .withPort(connectionConfiguration.port)

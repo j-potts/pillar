@@ -1,0 +1,17 @@
+<configuration>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%date{ISO8601} %logger{15} - %message%n%xException{5}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- log levels -->
+    <logger name="com.datastax.driver.core" level="ERROR" />
+    <logger name="de.kaufhof.pillar" level="INFO" />
+
+    <root level="WARN">
+        <appender-ref ref="STDOUT" />
+    </root>
+
+</configuration>

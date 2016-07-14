@@ -13,7 +13,7 @@ class CassandraMigrator(registry: Registry) extends Migrator {
   }
 
   override def initialize(session: Session, keyspace: String, replicationStrategy: ReplicationStrategy) {
-    executeIdempotentCommand(session, s"CREATE KEYSPACE $keyspace WITH replication = ${replicationStrategy.toString()}")
+    executeIdempotentCommand(session, s"CREATE KEYSPACE $keyspace WITH replication = ${replicationStrategy.cql}")
     executeIdempotentCommand(session,
       """
         | CREATE TABLE %s.applied_migrations (

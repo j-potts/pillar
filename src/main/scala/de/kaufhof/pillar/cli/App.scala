@@ -49,8 +49,6 @@ class App(reporter: Reporter, configuration: Config) {
       case e: Exception => throw e
     }
 
-    // TODO: Command shouldn't be the sole point of entry when passing things into a migration.
-    // TODO: This should be refactored at some point.
     val command = Command(
       commandLineConfiguration.command,
       session,

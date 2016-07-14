@@ -1,5 +1,9 @@
 package de.kaufhof.pillar
 
+/**
+  * Defines all possible ReplicationStrategy configurations.
+  * A NetworkTopologyStrategy will require the appropriate snitch.
+  */
 sealed trait ReplicationStrategy {
   def cql: String
   override def toString: String = cql

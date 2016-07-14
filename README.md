@@ -91,6 +91,7 @@ pillar.my_keyspace {
 *Note: development is the default environment if nothing is specified*
 
 Or we could compile and run the jar:
+
 ```
 java -cp "slf4j-simple.jar:/core/pillar/lib/pillar-assembly.jar" de.kaufhof.pillar.cli.App -d "path/to/migrations" -e "prod" initialize "my_keyspace"
 ```
@@ -160,7 +161,7 @@ The ReplicationStrategy and ReplicationFactor can be configured per environment.
 SimplyStrategy with RF 3 will be used by default.
 Given a data store called faker, the application.conf might look like the following:
 
-    ```
+```
     pillar.faker {
         development {
             cassandra-seed-address: "127.0.0.1"
@@ -169,9 +170,8 @@ Given a data store called faker, the application.conf might look like the follow
             replicationFactor: 0
         }
     }
-    ```
-
-    ```
+```
+```
     pillar.faker {
         development {
             cassandra-seed-address: "127.0.0.1"
@@ -183,7 +183,7 @@ Given a data store called faker, the application.conf might look like the follow
             ]
         }
     }
-    ```
+```
 
 ##### SSL & Authentication
 You can optionally add ssl options and authentication to each of the environments:

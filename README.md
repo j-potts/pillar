@@ -93,7 +93,7 @@ pillar.my_keyspace {
 Or we could compile and run the jar:
 
 ```
-java -cp "slf4j-simple.jar:/core/pillar/lib/pillar-assembly.jar" de.kaufhof.pillar.cli.App -d "path/to/migrations" -e "prod" initialize "my_keyspace"
+java -cp "slf4j-simple.jar:pillar-assembly.jar" de.kaufhof.pillar.cli.App -d "path/to/migrations" -e "prod" initialize "my_keyspace"
 ```
 
 #### Migration Files

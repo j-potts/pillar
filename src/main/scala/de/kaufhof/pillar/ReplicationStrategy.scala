@@ -1,19 +1,24 @@
 package de.kaufhof.pillar
 
+/**
+  * Defines all possible ReplicationStrategy configurations.
+  * A NetworkTopologyStrategy will require the appropriate snitch.
+  */
 sealed trait ReplicationStrategy {
-  override def toString: String
+  def cql: String
+  override def toString: String = cql
 }
 
 final case class SimpleStrategy(replicationFactor: Int = 3) extends ReplicationStrategy {
   require(replicationFactor > 0)
 
-  override def toString: String = s"{'class' : 'SimpleStrategy', 'replication_factor' : $replicationFactor}"
+  override def cql: String = s"{'class' : 'SimpleStrategy', 'replication_factor' : $replicationFactor}"
 }
 
 final case class NetworkTopologyStrategy(dataCenters: Seq[CassandraDataCenter]) extends ReplicationStrategy {
   require(dataCenters.nonEmpty)
 
-  override def toString: String = {
+  override def cql: String = {
     val replicationFacString = dataCenters.map { dc =>
       s"'${dc.name}' : ${dc.replicationFactor} "
     }.mkString(", ")

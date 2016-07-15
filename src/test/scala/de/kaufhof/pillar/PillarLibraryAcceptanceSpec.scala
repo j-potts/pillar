@@ -2,21 +2,20 @@ package de.kaufhof.pillar
 
 import java.util.Date
 
-import com.datastax.driver.core.Cluster
 import com.datastax.driver.core.exceptions.InvalidQueryException
 import com.datastax.driver.core.querybuilder.QueryBuilder
 import org.scalatest.{BeforeAndAfter, FeatureSpec, GivenWhenThen, Matchers}
 
 class PillarLibraryAcceptanceSpec extends FeatureSpec
+  with CassandraSpec
   with GivenWhenThen
   with BeforeAndAfter
   with Matchers
   with AcceptanceAssertions {
 
-  val cluster = Cluster.builder().addContactPoint("127.0.0.1").build()
   val keyspaceName = "test_%d".format(System.currentTimeMillis())
-  val session = cluster.connect()
   val simpleStrategy = SimpleStrategy()
+
   val migrations = Seq(
     Migration("creates events table", new Date(System.currentTimeMillis() - 5000),
       """
@@ -37,9 +36,10 @@ class PillarLibraryAcceptanceSpec extends FeatureSpec
         |  viewed_at timestamp
         |)
       """.stripMargin,
-      Some( """
-              |DROP TABLE views
-            """.stripMargin)),
+      Some(
+        """
+          |DROP TABLE views
+        """.stripMargin)),
     Migration("adds user_agent to views table", new Date(System.currentTimeMillis() - 1000),
       """
         |ALTER TABLE views
@@ -49,9 +49,10 @@ class PillarLibraryAcceptanceSpec extends FeatureSpec
       """
         |CREATE INDEX views_user_agent ON views(user_agent)
       """.stripMargin,
-      Some( """
-              |DROP INDEX views_user_agent
-            """.stripMargin))
+      Some(
+        """
+          |DROP INDEX views_user_agent
+        """.stripMargin))
   )
   val registry = Registry(migrations)
   val migrator = Migrator(registry)
@@ -81,7 +82,7 @@ class PillarLibraryAcceptanceSpec extends FeatureSpec
 
     scenario("initialize an existing keyspace without a applied_migrations column family") {
       Given("an existing keyspace")
-      session.execute(s"CREATE KEYSPACE $keyspaceName WITH replication = ${simpleStrategy.toString}")
+      session.execute(s"CREATE KEYSPACE $keyspaceName WITH replication = ${simpleStrategy.cql}")
 
       When("the migrator initializes the keyspace")
       migrator.initialize(session, keyspaceName, simpleStrategy)

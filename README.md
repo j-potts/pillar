@@ -69,12 +69,32 @@ authored. Migrations are applied in ascending order and reversed in descending o
 
 ### Command Line
 
-Here's the short version:
+#####Here's the short version:
 
+Given the configuration:
+
+```
+pillar.my_keyspace {
+  prod {
+     ...
+  }
+  development {
+       ...
+    }
+}
+```
   1. Write migrations, place them in conf/pillar/migrations/myapp.
   1. Add pillar settings to conf/application.conf.
-  1. % pillar initialize myapp
-  1. % pillar migrate myapp
+  1. `% pillar initialize -e prod my_keyspace`
+  1. `% pillar migrate -e prod my_keyspace`
+
+*Note: development is the default environment if nothing is specified*
+
+Or we could compile and run the jar:
+
+```
+java -cp "slf4j-simple.jar:pillar-assembly.jar" de.kaufhof.pillar.cli.App -d "path/to/migrations" -e "prod" initialize "my_keyspace"
+```
 
 #### Migration Files
 
@@ -136,26 +156,37 @@ The Pillar command line interface expects to find migrations in conf/pillar/migr
 #### Configuration
 
 Pillar uses the [Typesafe Config][typesafeconfig] library for configuration. The Pillar command-line interface expects
-to find an application.conf file in ./conf or ./src/main/resources. Given a data store called faker, the
-application.conf might look like the following:
+to find an application.conf file in ./conf or ./src/main/resources.
+The ReplicationStrategy and ReplicationFactor can be configured per environment. If left out completely,
+SimplyStrategy with RF 3 will be used by default.
+Given a data store called faker, the application.conf might look like the following:
 
+```
     pillar.faker {
         development {
             cassandra-seed-address: "127.0.0.1"
             cassandra-keyspace-name: "pillar_development"
-        }
-        test {
-            cassandra-seed-address: "127.0.0.1"
-            cassandra-keyspace-name: "pillar_test"
-        }
-        acceptance_test {
-            cassandra-seed-address: "127.0.0.1"
-            cassandra-keyspace-name: "pillar_acceptance_test"
+            replicationStrategy: "SimpleStrategy"
+            replicationFactor: 0
         }
     }
+```
+```
+    pillar.faker {
+        development {
+            cassandra-seed-address: "127.0.0.1"
+            cassandra-keyspace-name: "pillar_development"
+            replicationStrategy: "NetworkTopologyStrategy"
+            replicationFactor: [
+                {dc1: 2},
+                {dc2: 3}
+            ]
+        }
+    }
+```
 
 ##### SSL & Authentication
-You can add ssl options and authentication to each of the environments:
+You can optionally add ssl options and authentication to each of the environments:
 
     pillar.faker {
         development {
@@ -225,7 +256,7 @@ The package installs to /opt/pillar by default. The /opt/pillar/bin/pillar execu
 
     data-store  The target data store, as defined in application.conf
 
-#### Examples
+#### More Examples
 
 Initialize the faker datastore development environment
 

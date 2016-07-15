@@ -20,7 +20,10 @@ object PillarBuild extends Build {
     "com.typesafe" % "config" % "1.0.1",
     "org.clapper" %% "argot" % "1.0.3",
     "org.mockito" % "mockito-core" % "1.9.5" % "test",
-    "org.scalatest" %% "scalatest" % "2.2.0" % "test"
+    "org.scalatest" %% "scalatest" % "2.2.0" % "test",
+    "org.cassandraunit" % "cassandra-unit" % "3.0.0.1" % "test",
+    "com.google.guava" % "guava" % "18.0" % "test",
+    "ch.qos.logback" % "logback-classic" % "1.1.7" % "test"
   )
 
   val rhPackage = TaskKey[File]("rh-package", "Packages the application for Red Hat Package Manager")
@@ -80,6 +83,7 @@ object PillarBuild extends Build {
       else
         Some("releases" at nexus + "service/local/staging/deploy/maven2")
     },
+    parallelExecution in Test := false,
     publishMavenStyle := true,
     publishArtifact in Test := false,
     pomIncludeRepository := { _ => false },

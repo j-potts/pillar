@@ -8,9 +8,9 @@ class ReplicationStrategySpec extends FlatSpec with Matchers {
   private val configuration = ConfigFactory.load()
   private val datastore = "test"
 
-  behavior of "A configuration with no replication strategy"
+  behavior of "A configuration with definition whatsoever"
   it should "return a SimpleStrategy object with a replication factor of 3" in {
-    val goodCase = ReplicationStrategyBuilder.getReplicationStrategy(configuration, datastore, "test")
+    val goodCase = ReplicationStrategyBuilder.getReplicationStrategy(configuration, datastore, "unknownenv")
     goodCase shouldBe a [SimpleStrategy]
     goodCase match {
       case s: SimpleStrategy => s.replicationFactor should equal(3)

@@ -56,7 +56,6 @@ trait Migration {
       value("authored_at", authoredAt).
       value("description", description).
       value("applied_at", System.currentTimeMillis()).
-      enableTracing()
     )
   }
 }
